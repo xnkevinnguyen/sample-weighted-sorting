@@ -29,6 +29,7 @@ ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1','localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'store_api',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -37,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'shopping_api'
 ]
 
 MIDDLEWARE = [
@@ -120,4 +120,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'shopping_api.UserProfile'
+AUTH_USER_MODEL = 'store_api.UserProfile'
