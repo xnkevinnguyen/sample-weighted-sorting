@@ -1,1 +1,1 @@
-# shopping-platform
+# django-server
