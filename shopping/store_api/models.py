@@ -1,10 +1,8 @@
-from django.db import models
-from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
-
+from django.db import models
 
 
 # Create your models here.
@@ -52,16 +50,12 @@ class UserProfileManager(BaseUserManager):
 
         return user
 
-class UserProfile(AbstractBaseUser, PermissionsMixin):
+
+class StoreUserProfile(AbstractBaseUser, PermissionsMixin):
     """ Represents a user profile inside our system"""
 
-    is_candidate = models.BooleanField(default=False)
-    is_employer = models.BooleanField(default=False)
-
     email = models.EmailField(max_length=40, unique=True)
-    first_name = models.CharField(max_length=30, blank=False, default="")
-    last_name = models.CharField(max_length=30, blank=False, default="")
-    last_name2 = models.CharField(max_length=30, blank=False, default="")
+    store_name = models.CharField(max_length=30, blank=False, default="")
 
     phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
                                  message="Phone number must be entered in the format: '5143339994'. between 9-15 digits allowed.")
@@ -73,18 +67,21 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     objects = UserProfileManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name']
+    REQUIRED_FIELDS = ['store_name']
 
-    def get_first_name(self):
-        """ Used to get a users name."""
-
-        return self.first_name
-
-    def get_last_name(self):
+    def get_store_name(self):
         """Used to get a users short name"""
-        return self.last_name
+        return self.store_name
 
     def __str__(self):
         """Print object as a string"""
-
         return self.email
+
+
+class StoreItem(models.Model):
+    """Represents an item of a Store"""
+    store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True ,related_name='store_items')
+    item_id = models.IntegerField(primary_key=True)
+    item_name = models.CharField(max_length=30, blank=False, default="")
+
+    objects = BaseUserManager()

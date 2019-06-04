@@ -7,8 +7,9 @@ from . import views
 router = DefaultRouter()
 
 router.register('users', views.UserProfileViewSet)
+router.register('add', views.AddItemStoreViewSet)
 
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('store/', include(router.urls)),
 ]

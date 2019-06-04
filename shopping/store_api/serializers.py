@@ -3,30 +3,36 @@ from rest_framework import serializers
 from . import models
 
 
-class HelloSerializer(serializers.Serializer):
-    """Serialize a name field to test our api"""
-
-    first_name = serializers.CharField(max_length=10)
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    """A serializer for our user profile objects."""
+class StoreUserProfileSerializer(serializers.ModelSerializer):
+    """A serializer for our store user profile objects."""
+    store_items = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
-        model = models.UserProfile
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number',
-                  'password')
+        model = models.StoreUserProfile
+        fields = ('id', 'email', 'store_name', 'phone_number',
+                  'password','store_items')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         """Create and return a new user."""
 
-        user = models.UserProfile(
+        user = models.StoreUserProfile(
             email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            store_name=validated_data['store_name'],
             phone_number=validated_data['phone_number'],
         )
 
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+
+class StoreItemSerializer(serializers.ModelSerializer):
+    """"""
+    store_user = StoreUserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = models.StoreItem
+        fields = ('item_id', 'item_name', 'store_user')
+
+
