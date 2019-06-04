@@ -10,7 +10,7 @@ class StoreUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.StoreUserProfile
         fields = ('id', 'email', 'store_name', 'phone_number',
-                  'password','store_items')
+                  'password', 'store_items')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -28,11 +28,9 @@ class StoreUserProfileSerializer(serializers.ModelSerializer):
 
 
 class StoreItemSerializer(serializers.ModelSerializer):
-    """"""
-    store_user = StoreUserProfileSerializer(read_only=True)
+    """A serializer for store items"""
 
     class Meta:
         model = models.StoreItem
-        fields = ('item_id', 'item_name', 'store_user')
-
-
+        fields = ('item_id', 'item_name')
+        extra_kwargs = {'store_user': {'read_only': True}}

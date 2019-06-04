@@ -31,7 +31,7 @@ class UserProfileManager(BaseUserManager):
     def create_superuser(self, **kwargs):
         """Constructor for a superuser"""
 
-        print("Creating a super - user for " + kwargs['first_name'])
+        print("Creating a super - user for " + kwargs['email'])
 
         email = self.normalize_email(kwargs['email'])
 
@@ -41,7 +41,7 @@ class UserProfileManager(BaseUserManager):
 
         # user = self.create_user(**kwargs)
 
-        print("Setting super user properties for " + kwargs['first_name'])
+        print("Setting super user properties for " + kwargs['email'])
 
         user.is_superuser = True
         user.is_staff = True
@@ -83,5 +83,11 @@ class StoreItem(models.Model):
     store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True ,related_name='store_items')
     item_id = models.IntegerField(primary_key=True)
     item_name = models.CharField(max_length=30, blank=False, default="")
+    price=models.IntegerField(null=True)
+    created_on =models.DateTimeField(auto_now_add=True, null=True)
 
     objects = BaseUserManager()
+
+    def ___str___(self):
+        """Returns the model as a string"""
+        return self.item_name

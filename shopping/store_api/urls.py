@@ -7,8 +7,8 @@ from . import views
 router = DefaultRouter()
 
 router.register('users', views.UserProfileViewSet)
-router.register('add', views.AddItemStoreViewSet)
-
+router.register('item', views.ItemStoreViewSet)
+router.register('login', views.LoginViewSet, base_name='login')
 
 urlpatterns = [
     path('store/', include(router.urls)),

@@ -1,14 +1,9 @@
-import json
-
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import filters
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.views import APIView
-from store_api.models import StoreItem
+from rest_framework.authtoken.serializers import  AuthTokenSerializer
+from rest_framework.authtoken.views import ObtainAuthToken
+
 
 from .import permissions
 from . import models
@@ -27,28 +22,25 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     search_fields = ('store_name', 'email',)
 
 
-class AddItemStoreViewSet(viewsets.ModelViewSet):
-    """Add item to the store on the /store/add endpoint"""
+class ItemStoreViewSet(viewsets.ModelViewSet):
+    """Handles creating, reading and updating item in a store"""
 
+    authentication_classes = (TokenAuthentication,)
     serializer_class = serializers.StoreItemSerializer
     queryset = models.StoreItem.objects.all()
-    print("----Adding an item to the store")
 
-    # def create(self, request, *args, **kwargs):
-    #     print("----Adding an item to the store")
-    #     print(kwargs.)
-    #     try:
-    #
-    #         try:
-    #             user = User.objects.get(username=request.user)
-    #         except User.DoesNotExist:
-    #             return JsonResponse({'error': 'User is not logged in'}, status=400)
-    #
-    #         item = StoreItem(item_id=requ, item_name=item_name, store_user=user)
-    #
-    #         item.save()
-    #
-    #         return JsonResponse({'item_id': item.item_id})
-    #
-    #     except KeyError:
-    #         return JsonResponse({'error': 'There was an error parsing the request'}, status=400)
+    def perform_create(self, serializer):
+        """Sets the UserProfile to curently logged in user"""
+        serializer.save(store_user=self.request.user)
+
+
+
+class LoginViewSet(viewsets.ViewSet):
+    """Returns an auth token"""
+
+    serializer_class = AuthTokenSerializer
+
+    def create(self,request):
+        """Creates and validate a token"""
+
+        return ObtainAuthToken().post(request)
