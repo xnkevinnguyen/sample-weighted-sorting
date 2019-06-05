@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
+from datetime import datetime
 from django.db import models
 
 
@@ -99,6 +100,7 @@ class StoreItem(models.Model):
         object = {
             'item_name': self.item_name,
             'price': self.price,
-            'created_on': self.created_on
+            'popularity': self.popularity,
+            'created_on': self.created_on.strftime('%m%d%H')
         }
         return object

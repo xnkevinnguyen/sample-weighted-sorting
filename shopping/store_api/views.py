@@ -66,19 +66,16 @@ class SortView(TemplateView):
         recency_weight = request.GET.get('recency_weight')
         popularity_weight = request.GET.get('popularity_weight')
         queryset = models.StoreItem.objects.all()
-        # Sorted items by value
-        value_calculator = ItemSortManager(queryset, price_weight, recency_weight, popularity_weight)
-        ordered_items = []
-        for obj in queryset:
-            estimated_value = value_calculator.get_estimated_value(obj)
-            ordered_items.append({'item': obj.get()})
+        # Sorted items by value,
+        item_sort_manager = ItemSortManager(queryset, int(price_weight), int(recency_weight), int(popularity_weight))
+        sorted_items = item_sort_manager.get_sorted_items()
 
         try:
             response = {
-                'orderedList': ordered_items,
+                'ordered_list': sorted_items,
                 'criterias': {
                     'price': price_weight,
-                    'Recency': recency_weight,
+                    'recency': recency_weight,
                     'popularity': popularity_weight
                 }
 
