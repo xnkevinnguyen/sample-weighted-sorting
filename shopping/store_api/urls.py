@@ -12,4 +12,5 @@ router.register('login', views.LoginViewSet, base_name='login')
 
 urlpatterns = [
     path('store/', include(router.urls)),
+    path('store/sort', views.SortView.as_view())
 ]

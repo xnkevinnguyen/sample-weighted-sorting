@@ -80,14 +80,25 @@ class StoreUserProfile(AbstractBaseUser, PermissionsMixin):
 
 class StoreItem(models.Model):
     """Represents an item of a Store"""
-    store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True ,related_name='store_items')
+    store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True, related_name='store_items')
     item_id = models.IntegerField(primary_key=True)
     item_name = models.CharField(max_length=30, blank=False, default="")
-    price=models.IntegerField(null=True)
-    created_on =models.DateTimeField(auto_now_add=True, null=True)
+    price = models.IntegerField(null=True)
+    popularity = models.IntegerField(null=True)
+    created_on = models.DateTimeField(auto_now_add=True, null=True)
 
     objects = BaseUserManager()
 
     def ___str___(self):
         """Returns the model as a string"""
         return self.item_name
+
+    def get(self):
+        """Returns the model as a json object"""
+
+        object = {
+            'item_name': self.item_name,
+            'price': self.price,
+            'created_on': self.created_on
+        }
+        return object

@@ -1,15 +1,16 @@
+from django.http import JsonResponse
+from django.views.generic import TemplateView
 from rest_framework import filters
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.authtoken.serializers import  AuthTokenSerializer
+from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-
-
-from .import permissions
 from . import models
+from . import permissions
 from . import serializers
+from .utility import ItemSortManager
 
 
 # Create your views here.
@@ -30,13 +31,11 @@ class ItemStoreViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     serializer_class = serializers.StoreItemSerializer
     queryset = models.StoreItem.objects.all()
-    permission_classes = (permissions.UpdateOwnItem,IsAuthenticatedOrReadOnly)
-
+    permission_classes = (permissions.UpdateOwnItem, IsAuthenticatedOrReadOnly)
 
     def perform_create(self, serializer):
         """Sets the UserProfile to curently logged in user"""
         serializer.save(store_user=self.request.user)
-
 
 
 class LoginViewSet(viewsets.ViewSet):
@@ -44,7 +43,47 @@ class LoginViewSet(viewsets.ViewSet):
 
     serializer_class = AuthTokenSerializer
 
-    def create(self,request):
+    def create(self, request):
         """Creates and validate a token"""
 
         return ObtainAuthToken().post(request)
+
+
+class SortView(TemplateView):
+    """
+    Handles the request to api/store/sort
+    Returns a list of items sorted by one or many criterias with value
+    Params: options
+    'price':
+    'recency':
+    'popularity':'
+    """
+    serializer_class = serializers.StoreItemSerializer
+    queryset = models.StoreItem.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        price_weight = request.GET.get('price_weight')
+        recency_weight = request.GET.get('recency_weight')
+        popularity_weight = request.GET.get('popularity_weight')
+        queryset = models.StoreItem.objects.all()
+        # Sorted items by value
+        value_calculator = ItemSortManager(queryset, price_weight, recency_weight, popularity_weight)
+        ordered_items = []
+        for obj in queryset:
+            estimated_value = value_calculator.get_estimated_value(obj)
+            ordered_items.append({'item': obj.get()})
+
+        try:
+            response = {
+                'orderedList': ordered_items,
+                'criterias': {
+                    'price': price_weight,
+                    'Recency': recency_weight,
+                    'popularity': popularity_weight
+                }
+
+            }
+            return JsonResponse(response)
+
+        except BaseException as error:
+            return JsonResponse({'error': repr(error)}, status=400)
