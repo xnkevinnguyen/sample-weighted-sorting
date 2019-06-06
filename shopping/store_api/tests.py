@@ -11,7 +11,7 @@ class UtilityTest(unittest.TestCase):
     fake_data = FakeData()
 
     # Returns True or False.
-    def test_order_item_sort_manager_list(self):
+    def test_item_order(self):
         """
         Asserts that the class ItemSortManager returns an ordered list with descending
         order of estimated value

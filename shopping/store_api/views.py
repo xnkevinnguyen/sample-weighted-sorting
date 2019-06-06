@@ -1,3 +1,5 @@
+import uuid
+
 from django.http import JsonResponse
 from django.views.generic import TemplateView
 from rest_framework import filters
@@ -34,8 +36,9 @@ class ItemStoreViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.UpdateOwnItem, IsAuthenticatedOrReadOnly)
 
     def perform_create(self, serializer):
+        unique_id = uuid.uuid4()
         """Sets the UserProfile to curently logged in user"""
-        serializer.save(store_user=self.request.user)
+        serializer.save(store_user=self.request.user, item_id=unique_id)
 
 
 class LoginViewSet(viewsets.ViewSet):
