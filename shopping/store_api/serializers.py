@@ -32,5 +32,5 @@ class StoreItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.StoreItem
-        fields = ('item_id', 'item_name','store_user', 'price','popularity', 'created_on')
+        fields = ( 'item_name','store_user', 'price','popularity', 'created_on')
         extra_kwargs = {'store_user': {'read_only': True}}

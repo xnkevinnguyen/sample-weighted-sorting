@@ -62,21 +62,34 @@ class SortView(TemplateView):
     queryset = models.StoreItem.objects.all()
 
     def get(self, request, *args, **kwargs):
-        price_weight = request.GET.get('price_weight')
-        recency_weight = request.GET.get('recency_weight')
-        popularity_weight = request.GET.get('popularity_weight')
+
         queryset = models.StoreItem.objects.all()
         # Sorted items by value,
-        item_sort_manager = ItemSortManager(queryset, int(price_weight), int(recency_weight), int(popularity_weight))
-        sorted_items = item_sort_manager.get_sorted_items()
 
         try:
+            price_weight = request.GET.get('price_weight')
+            recency_weight = request.GET.get('recency_weight')
+            popularity_weight= request.GET.get('popularity_weight')
+
+            price_weight_value = int(price_weight)
+            recency_weight_value = int(recency_weight)
+            popularity_weight_value = int(popularity_weight)
+
+            if price_weight_value+recency_weight_value+popularity_weight_value!=100:
+                return JsonResponse({'error': 'The sum of the weight values must be 100'}, status=400)
+
+            item_sort_manager = ItemSortManager(queryset, price_weight_value, recency_weight_value,
+                                                popularity_weight_value)
+
+            sorted_items = item_sort_manager.get_sorted_items()
+
             response = {
+
                 'ordered_list': sorted_items,
                 'criterias': {
-                    'price': price_weight,
-                    'recency': recency_weight,
-                    'popularity': popularity_weight
+                    'price': price_weight+"%",
+                    'recency': recency_weight+"%",
+                    'popularity': popularity_weight+"%"
                 }
 
             }

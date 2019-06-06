@@ -4,16 +4,15 @@ from datetime import datetime
 
 class ItemSortManager:
     CONST_AVERAGE = 100
-    CONST_SPREAD_FACTOR = 7
+    CONST_SPREAD_FACTOR = 1
     CURRENT_TIME = int(datetime.now().strftime('%m%d%H'))
 
-    def __init__(self, storeitems, priceweight=0, recencyweight=0, popularityweight=0):
+    def __init__(self, store_items, price_weight=0, recency_weight=0, popularity_weight=0):
         """Constructor of a value calculator for a list of store items"""
 
-        self.__price_weight = priceweight
-        self.__recency_weight = recencyweight
-        self.__popularity_weight = popularityweight
-
+        self.__price_weight = price_weight
+        self.__recency_weight = recency_weight
+        self.__popularity_weight = popularity_weight
 
         sum = {
             'price': 0,
@@ -25,9 +24,9 @@ class ItemSortManager:
             'popularity': 0,
             'recency': 0
         }
-        items_quantity = len(storeitems)
+        items_quantity = len(store_items)
 
-        for item in storeitems:
+        for item in store_items:
             if item.price:
                 sum['price'] += item.price
                 variance_sum['price'] += math.pow(item.price, 2)
@@ -39,21 +38,30 @@ class ItemSortManager:
                 time_since_posted = self.CURRENT_TIME - date_time_value
                 sum['recency'] += time_since_posted
                 variance_sum['recency'] += math.pow(time_since_posted, 2)
+
+        #variance_sum cannot be 0 or negative
+        if variance_sum['price'] <= 0:
+            variance_sum['price'] = 1
+        if variance_sum['popularity'] <= 0:
+            variance_sum['popularity'] = 1
+        if variance_sum['recency'] <= 0:
+            variance_sum['recency'] = 1
+
         variance_divider = items_quantity - 1
         self.__price = {
             'average': sum['price'] / items_quantity,
-            'variance': variance_sum['price'] / (variance_divider)
+            'variance': variance_sum['price'] / variance_divider
         }
         self.__popularity = {
             'average': sum['popularity'] / items_quantity,
-            'variance': variance_sum['popularity'] / (variance_divider)
+            'variance': variance_sum['popularity'] / variance_divider
         }
         self.__recency = {
             'average': sum['recency'] / items_quantity,
-            'variance': variance_sum['recency'] / (variance_divider)
+            'variance': variance_sum['recency'] / variance_divider
         }
 
-        self.__sorted_items = self.sort_by_estimated_value(storeitems)
+        self.__sorted_items = self.sort_by_estimated_value(store_items)
 
     def get_sorted_items(self):
         return self.__sorted_items
@@ -72,27 +80,28 @@ class ItemSortManager:
         self.quick_sort(sorted_items, 0, len(sorted_items) - 1)
         return sorted_items
 
-    def get_estimated_value(self, storeitem):
+    def get_estimated_value(self, store_item):
         """Returns the value according to the criterias price"""
 
         estimated_value = self.CONST_AVERAGE
-        if (storeitem.price):
+        if (store_item.price):
             # Having a higher price reduces the value
-            estimated_value -= self.CONST_SPREAD_FACTOR *self.__price_weight *(storeitem.price - self.__price['average']) / math.sqrt(
+            estimated_value -= self.CONST_SPREAD_FACTOR * self.__price_weight * (
+                    store_item.price - self.__price['average']) / math.sqrt(
                 self.__price['variance'])
 
-
-        if (storeitem.created_on):
+        if (store_item.created_on):
             # Higher time since posted reduces the value
-            date_time_value = int(storeitem.created_on.strftime('%m%d%H'))
+            date_time_value = int(store_item.created_on.strftime('%m%d%H'))
             time_since_posted = self.CURRENT_TIME - date_time_value
-            estimated_value -= self.CONST_SPREAD_FACTOR *self.__recency_weight* (time_since_posted - self.__recency['average']) / math.sqrt(
+            estimated_value -= self.CONST_SPREAD_FACTOR * self.__recency_weight * (
+                    time_since_posted - self.__recency['average']) / math.sqrt(
                 self.__recency['variance'])
 
-        if (storeitem.popularity):
+        if (store_item.popularity):
             # Having a high popularity  increases the value
-            estimated_value += self.CONST_SPREAD_FACTOR * self.__popularity_weight*(
-                        storeitem.popularity - self.__popularity['average']) / math.sqrt(
+            estimated_value += self.CONST_SPREAD_FACTOR * self.__popularity_weight * (
+                    store_item.popularity - self.__popularity['average']) / math.sqrt(
                 self.__popularity['variance'])
 
         return int(estimated_value)
@@ -117,62 +126,62 @@ class ItemSortManager:
                 right_pivot = self.get_set_pivot(list, new_center_index + 1, endindex)
                 self.quick_sort_helper(list, new_center_index + 1, endindex, right_pivot)
 
-    def partition(self, list, startindex, endindex, pivotvalue):
+    def partition(self, list, start_index, end_index, pivot_value):
         """Handles putting the pivot at right position and distribute smaller then pivot to the left
         and bigger element to the right
         """
-        border_index = startindex + 1
+        border_index = start_index + 1
 
-        for i in range(border_index, endindex + 1):
+        for i in range(border_index, end_index + 1):
 
-            if list[i]['estimated_value'] >= pivotvalue:
+            if list[i]['estimated_value'] >= pivot_value:
                 list[i], list[border_index] = list[border_index], list[i]
 
                 border_index += 1
 
         pivot_index = border_index - 1
-        list[startindex], list[pivot_index] = list[pivot_index], list[startindex]
+        list[start_index], list[pivot_index] = list[pivot_index], list[start_index]
         return pivot_index
 
-    def get_set_pivot(self, list, startindex, endindex):
+    def get_set_pivot(self, item_list, start_index, end_index):
         """
         Returns the median of 3 values  start, middle and end of the list
         Sets the pivot at startindex position of the list
         """
         # TODO Refactor
-        if (endindex - startindex) > 2:
-            middle_index = int((startindex + endindex) / 2)
-            if ((list[startindex]['estimated_value'] <= list[middle_index]['estimated_value']) &
-                    (list[middle_index]['estimated_value'] <= list[endindex]['estimated_value']) | (
-                            list[endindex]['estimated_value'] <= list[middle_index]['estimated_value']) &
-                    (list[middle_index]['estimated_value'] <= list[startindex]['estimated_value'])):
-                list[startindex], list[middle_index] = list[middle_index], list[startindex]
-                return list[startindex]['estimated_value']
-            if ((list[middle_index]['estimated_value'] <= list[startindex]['estimated_value']) &
-                    (list[startindex]['estimated_value'] <= list[endindex]['estimated_value']) | (
-                            list[endindex]['estimated_value'] <= list[startindex]['estimated_value']) &
-                    (list[startindex]['estimated_value'] <= list[middle_index]['estimated_value'])):
-                return list[startindex]['estimated_value']
+        if (end_index - start_index) > 2:
+            middle_index = int((start_index + end_index) / 2)
+            if ((item_list[start_index]['estimated_value'] <= item_list[middle_index]['estimated_value']) &
+                    (item_list[middle_index]['estimated_value'] <= item_list[end_index]['estimated_value']) | (
+                            item_list[end_index]['estimated_value'] <= item_list[middle_index]['estimated_value']) &
+                    (item_list[middle_index]['estimated_value'] <= item_list[start_index]['estimated_value'])):
+                item_list[start_index], item_list[middle_index] = item_list[middle_index], item_list[start_index]
+                return item_list[start_index]['estimated_value']
+            if ((item_list[middle_index]['estimated_value'] <= item_list[start_index]['estimated_value']) &
+                    (item_list[start_index]['estimated_value'] <= item_list[end_index]['estimated_value']) | (
+                            item_list[end_index]['estimated_value'] <= item_list[start_index]['estimated_value']) &
+                    (item_list[start_index]['estimated_value'] <= item_list[middle_index]['estimated_value'])):
+                return item_list[start_index]['estimated_value']
             else:
-                list[startindex], list[endindex] = list[endindex], list[startindex]
-                return list[startindex]['estimated_value']
+                item_list[start_index], item_list[end_index] = item_list[end_index], item_list[start_index]
+                return item_list[start_index]['estimated_value']
 
         else:
 
-            return list[startindex]['estimated_value']
+            return item_list[start_index]['estimated_value']
 
-    def get_initial_pivot(self, list, startindex, endindex):
+    def get_initial_pivot(self, item_list, start_index, end_index):
         """Returns the value closest to the const average"""
-        if (endindex - startindex) > 2:
-            middle_index = int((startindex + endindex) / 2)
-            start_difference = abs(self.CONST_AVERAGE - list[startindex]['estimated_value'])
+        if (end_index - start_index) > 2:
+            middle_index = int((start_index + end_index) / 2)
+            start_difference = abs(self.CONST_AVERAGE - item_list[start_index]['estimated_value'])
 
-            middle_difference = abs(self.CONST_AVERAGE - list[middle_index]['estimated_value'])
-            end_difference = abs(self.CONST_AVERAGE - list[endindex]['estimated_value'])
+            middle_difference = abs(self.CONST_AVERAGE - item_list[middle_index]['estimated_value'])
+            end_difference = abs(self.CONST_AVERAGE - item_list[end_index]['estimated_value'])
             if end_difference <= middle_difference & end_difference <= start_difference:
-                list[startindex], list[endindex] = list[endindex], list[startindex]
+                item_list[start_index], item_list[end_index] = item_list[end_index], item_list[start_index]
 
             if middle_difference <= start_difference & middle_difference <= end_difference:
-                list[startindex], list[middle_index] = list[middle_index], list[startindex]
+                item_list[start_index], item_list[middle_index] = item_list[middle_index], item_list[start_index]
 
-        return list[startindex]['estimated_value']
+        return item_list[start_index]['estimated_value']
