@@ -7,7 +7,7 @@ from .utility import ItemSortManager
 # Create your tests here.
 
 class UtilityTest(unittest.TestCase):
-    CONST_ITEM_NUMBER = 1000
+    CONST_ITEM_NUMBER = 100
     fake_data = FakeData()
 
     # Returns True or False.
@@ -16,11 +16,7 @@ class UtilityTest(unittest.TestCase):
         Asserts that the class ItemSortManager returns an ordered list with descending
         order of estimated value
         """
-        is_value_descending = True
         unordered_item_list = self.fake_data.get_unordered_item_list(self.CONST_ITEM_NUMBER)
-
-        for item in unordered_item_list:
-            print(item.get())
 
         item_sort_manager = ItemSortManager(unordered_item_list, self.fake_data.price_weight,
                                             self.fake_data.recency_weight,
@@ -29,14 +25,14 @@ class UtilityTest(unittest.TestCase):
         sorted_items = item_sort_manager.get_sorted_items()
 
         # iterate through the sorted last up to before last
+        is_value_descending = True
+
         for i in range(0, self.CONST_ITEM_NUMBER - 2):
-            if (sorted_items[i]['estimated_value'] < sorted_items[i + 1]['estimated_value']):
+            if sorted_items[i]['estimated_value'] < sorted_items[i + 1]['estimated_value']:
                 is_value_descending = False
-                break
+            break
 
-            self.assertTrue('Value sorting', is_value_descending)
-
-
+        self.assertTrue(is_value_descending)
 
 
 if __name__ == '__main__':

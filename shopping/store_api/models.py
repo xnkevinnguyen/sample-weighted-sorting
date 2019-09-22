@@ -1,9 +1,9 @@
+import uuid
+
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.validators import RegexValidator
-import uuid
-from datetime import datetime
 from django.db import models
 
 
@@ -83,7 +83,7 @@ class StoreUserProfile(AbstractBaseUser, PermissionsMixin):
 class StoreItem(models.Model):
     """Represents an item of a Store"""
     store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True, related_name='store_items')
-    item_id = models.CharField(max_length=255,primary_key=True, default=uuid.uuid4())
+    item_id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4())
     item_name = models.CharField(max_length=30, blank=False, default="")
     price = models.IntegerField(null=True)
     popularity = models.IntegerField(null=True)
