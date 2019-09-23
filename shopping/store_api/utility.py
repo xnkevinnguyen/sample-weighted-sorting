@@ -1,10 +1,15 @@
 import math
 from datetime import datetime
 import numpy as np
+from collections import OrderedDict
+
+
+# CONST_AVERAGE = 100
+
 
 class ItemSortManager:
     CONST_AVERAGE = 100
-    CONST_SPREAD_FACTOR = 1
+    CONST_SPREAD_FACTOR = 0.04
     CURRENT_TIME = int(datetime.now().strftime('%m%d%H'))
 
     def __init__(self, store_items, price_weight=0, recency_weight=0, popularity_weight=0):
@@ -14,27 +19,34 @@ class ItemSortManager:
         self.__recency_weight = recency_weight
         self.__popularity_weight = popularity_weight
 
-
-
         print("Initializing averages and Standard Deviations for current item list")
 
-        price_list =[item.price for item in store_items]
-        recency_list =[self.CURRENT_TIME -int(item.created_on.strftime('%m%d%H')) for item in store_items]
-        popularity_list =[item.popularity for item in store_items]
+        price_list = [item.price for item in store_items]
+        recency_list = [self.CURRENT_TIME - int(item.created_on.strftime('%m%d%H')) for item in store_items]
+        popularity_list = [item.popularity for item in store_items]
 
         self.__price = {
+            'weight':price_weight,
+            'contribution_coefficient':-1,
             'average': np.mean(price_list),
             'standard_deviation': math.sqrt(np.var(price_list))
         }
-        print(self.__price)
         self.__popularity = {
+            'weight':popularity_weight,
+            'contribution_coefficient': 1,
             'average': np.mean(popularity_list),
-            'standard_deviation': math.sqrt(np.mean(popularity_list))
+            'standard_deviation': math.sqrt(np.var(popularity_list))
         }
         self.__recency = {
+            'weight':recency_weight,
+            'contribution_coefficient': -1,
             'average': np.mean(recency_list),
-            'standard_deviation': math.sqrt(np.mean(recency_list))
+            'standard_deviation': math.sqrt(np.var(recency_list))
         }
+
+        self.__criterias = OrderedDict([('price',self.__price),('popularity', self.__popularity), ('time_since_posted',self.__recency)])
+
+        print("Calling Sorting algorithm")
 
         self.__sorted_items = self.sort_by_estimated_value(store_items)
 
@@ -55,26 +67,31 @@ class ItemSortManager:
         self.quick_sort(sorted_items, 0, len(sorted_items) - 1)
         return sorted_items
 
-    def get_estimated_value(self, store_item):
-        """Returns the value according to the criterias price"""
-
+    def get_estimated_value(self, store_item) -> int:
+        """Returns the estimated value of the item according to the criterias """
         estimated_value = self.CONST_AVERAGE
-        if store_item.price:
-            # Having a higher price reduces the value
-            estimated_value -= self.CONST_SPREAD_FACTOR * self.__price_weight * (
-                    store_item.price - self.__price['average']) /self.__price['standard_deviation']
+        # Having a higher price reduces the value
+        print("Calculating ETV")
+        store_item.time_since_posted=self.CURRENT_TIME - int(store_item.created_on.strftime('%m%d%H'))
 
-        if store_item.created_on:
-            # Higher time since posted reduces the value
-            date_time_value = int(store_item.created_on.strftime('%m%d%H'))
-            time_since_posted = self.CURRENT_TIME - date_time_value
-            estimated_value -= self.CONST_SPREAD_FACTOR * self.__recency_weight * (
-                    time_since_posted - self.__recency['average']) / self.__recency['standard_deviation']
+        for  criteria_key,criteria in self.__criterias.items():
+            print(criteria_key +str(getattr(store_item,criteria_key)))
+            estimated_value += self.CONST_SPREAD_FACTOR *criteria['contribution_coefficient']\
+                *criteria['weight']*(getattr(store_item,criteria_key)-criteria['average'])/criteria['standard_deviation']
 
-        if store_item.popularity:
-            # Having a high popularity  increases the value
-            estimated_value += self.CONST_SPREAD_FACTOR * self.__popularity_weight * (
-                    store_item.popularity - self.__popularity['average']) / self.__popularity['standard_deviation']
+
+        # estimated_value -= self.CONST_SPREAD_FACTOR * self.__price_weight * (
+        #         store_item.price - self.__price['average']) / self.__price['standard_deviation']
+        #
+        # # Higher time since posted reduces the value
+        # date_time_value = int(store_item.created_on.strftime('%m%d%H'))
+        # time_since_posted = self.CURRENT_TIME - date_time_value
+        # estimated_value -= self.CONST_SPREAD_FACTOR * self.__recency_weight * (
+        #         time_since_posted - self.__recency['average']) / self.__recency['standard_deviation']
+        #
+        # # Having a high popularity  increases the value
+        # estimated_value += self.CONST_SPREAD_FACTOR * self.__popularity_weight * (
+        #         store_item.popularity - self.__popularity['average']) / self.__popularity['standard_deviation']
 
         return int(estimated_value)
 

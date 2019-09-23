@@ -85,8 +85,8 @@ class StoreItem(models.Model):
     store_user = models.ForeignKey(StoreUserProfile, on_delete=models.SET_NULL, null=True, related_name='store_items')
     item_id = models.CharField(max_length=255, primary_key=True, default=uuid.uuid4())
     item_name = models.CharField(max_length=30, blank=False, default="")
-    price = models.IntegerField(null=True)
-    popularity = models.IntegerField(null=True)
+    price = models.IntegerField(null=False,default=0)
+    popularity = models.IntegerField(null=False,default=0)
     created_on = models.DateTimeField(auto_now_add=True, null=True)
 
     objects = BaseUserManager()
